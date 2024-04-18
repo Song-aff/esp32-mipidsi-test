@@ -7,9 +7,9 @@ use hal::{
     clock::ClockControl,
     peripherals::Peripherals,
     prelude::*,
-    spi::{Spi, SpiMode},
-    timer::TimerGroup,
-    Delay, Rtc, IO,
+    spi::{master::Spi, SpiMode},
+    gpio::{NO_PIN,IO},
+    Delay
 };
 /* -------------------------- */
 
@@ -20,79 +20,73 @@ use embedded_graphics::{
 };
 
 // Provides the parallel port and display interface builders
-use display_interface_spi::SPIInterfaceNoCS;
+use display_interface_spi::SPIInterface;
 
 // Provides the Display builder
 use mipidsi::Builder;
 
 use fugit::RateExtU32;
+use esp_println::println;
+
 
 #[entry]
 fn main() -> ! {
+
     let peripherals = Peripherals::take();
-    let mut system = peripherals.SYSTEM.split();
-    let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
-    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-
-    // Disable the RTC and TIMG watchdog timers
-    let mut rtc = Rtc::new(peripherals.RTC_CNTL);
-    let timer_group0 = TimerGroup::new(
-        peripherals.TIMG0,
-        &clocks,
-        &mut system.peripheral_clock_control,
-    );
-    let mut wdt0 = timer_group0.wdt;
-    let timer_group1 = TimerGroup::new(
-        peripherals.TIMG1,
-        &clocks,
-        &mut system.peripheral_clock_control,
-    );
-    let mut wdt1 = timer_group1.wdt;
-    rtc.swd.disable();
-    rtc.rwdt.disable();
-    wdt0.disable();
-    wdt1.disable();
-
-    // Define the delay struct, needed for the display driver
+    let system = peripherals.SYSTEM.split();
+    let clocks = ClockControl::max(system.clock_control).freeze();
     let mut delay = Delay::new(&clocks);
+    let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
+    
 
-    // Define the Data/Command select pin as a digital output
+
     let dc = io.pins.gpio7.into_push_pull_output();
-    // Define the reset pin as digital outputs and make it high
     let mut rst = io.pins.gpio8.into_push_pull_output();
     rst.set_high().unwrap();
 
     // Define the SPI pins and create the SPI interface
     let sck = io.pins.gpio5;
-    let miso = io.pins.gpio4;
+    // let miso = io.pins.gpio4;
     let mosi = io.pins.gpio6;
-    let cs = io.pins.gpio10;
-    let spi = Spi::new(
-        peripherals.SPI2,
-        sck,
-        mosi,
-        miso,
-        cs,
-        60_u32.MHz(),
-        SpiMode::Mode0,
-        &mut system.peripheral_clock_control,
-        &clocks,
+    let cs = io.pins.gpio10.into_push_pull_output();
+
+    let spi = Spi::new(peripherals.SPI2, 60u32.MHz(), SpiMode::Mode0, &clocks).with_pins(
+        Some(sck),
+        Some(mosi),
+        NO_PIN,
+        NO_PIN,
     );
 
-    // Define the display interface with no chip select
-    let di = SPIInterfaceNoCS::new(spi, dc);
+    let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay);
+    let di = SPIInterface::new(spi_device, dc);
 
-    // Define the display from the display interface and initialize it
-    let mut display = Builder::ili9486_rgb565(di)
-        .init(&mut delay, Some(rst))
-        .unwrap();
+    let display_modal = mipidsi::models::ST7735s;
 
+    #[cfg(feature = "ST7735s")]
+    let display_modal = mipidsi::models::ST7735s;
+    #[cfg(feature = "ST7789")]
+    let display_modal = mipidsi::models::ST7789;
+    #[cfg(feature = "ST7796")]
+    let display_modal = mipidsi::models::ST7796;
+    #[cfg(feature = "ILI9341")]
+    let display_modal = mipidsi::models::ILI9341Rgb565;
+    #[cfg(feature = "ILI9342")]
+    let display_modal = mipidsi::models::ILI9342CRgb565;
+    #[cfg(feature = "ILI9386")]
+    let display_modal = mipidsi::models::ILI9486Rgb565;
+
+    let mut display = mipidsi::Builder::new(display_modal, di)
+    // .display_size(160, 200)
+    .reset_pin(rst)
+    .init(&mut delay)
+    .unwrap();
+
+    
     // Make the display all black
     display.clear(Rgb565::BLACK).unwrap();
-
     // Draw a smiley face with white eyes and a red mouth
-    draw_smiley(&mut display).unwrap();
-  
+    // draw_smiley(&mut display).unwrap();
+    demo(&mut display).unwrap();
     loop {
         // Do nothing
     }
@@ -126,6 +120,13 @@ fn draw_smiley<T: DrawTarget<Color = Rgb565>>(display: &mut T) -> Result<(), T::
     )
     .into_styled(PrimitiveStyle::with_fill(Rgb565::BLACK))
     .draw(display)?;
+    Ok(())
+}
 
+fn demo<T: DrawTarget<Color = Rgb565>>(display: &mut T) -> Result<(), T::Error> {
+        // Draw the left eye as a circle located at (50, 100), with a diameter of 40, filled with white
+        Circle::new(Point::new(0, 0), 40)
+        .into_styled(PrimitiveStyle::with_fill(Rgb565::WHITE))
+        .draw(display)?;
     Ok(())
 }

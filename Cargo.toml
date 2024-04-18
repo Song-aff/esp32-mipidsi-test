@@ -20,13 +20,25 @@ license = "MIT OR Apache-2.0"
 # fugit = "0.3.7"
 # mipidsi ={git="https://github.com/almindor/mipidsi",branch = "master"}
 [dependencies]
-hal = { package = "esp32c3-hal", version = "0.10.0" }
-esp-backtrace = { version = "0.7.0", features = ["esp32c3", "panic-handler", "exception-handler", "print-uart"] }
-esp-println       = { version = "0.5.0", features = ["esp32c3"] }
+embedded-hal = "1.0.0"
+hal = { package = "esp-hal", version = "0.16.1" ,features = [ "esp32c3","eh1" ] }
+esp-backtrace = { version = "0.11.1", features = ["esp32c3", "panic-handler", "exception-handler", "println"] }
+esp-println = { version = "0.9.1", features = ["esp32c3"] }
 embedded-graphics = "0.8.0"
-display-interface-spi = "0.4.1"
-mipidsi = "0.7.1"
+display-interface-spi = "0.5.0"
+mipidsi ={git="https://github.com/almindor/mipidsi",branch = "master"}
 fugit = "0.3.7"
+embedded-hal-bus = "0.1.0"
+
+[features]
+ILI9341 = []
+ILI9342 = []
+ILI9386 = []
+ST7735s = []
+ST7789 = []
+ST7796 = []
+
+
 
 
 [profile.dev]
