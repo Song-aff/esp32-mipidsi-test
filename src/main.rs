@@ -5,11 +5,11 @@
 use esp_backtrace as _;
 use hal::{
     clock::ClockControl,
+    gpio::{IO, NO_PIN},
     peripherals::Peripherals,
     prelude::*,
     spi::{master::Spi, SpiMode},
-    gpio::{NO_PIN,IO},
-    Delay
+    Delay,
 };
 /* -------------------------- */
 
@@ -25,30 +25,38 @@ use display_interface_spi::SPIInterface;
 // Provides the Display builder
 use mipidsi::Builder;
 
-use fugit::RateExtU32;
 use esp_println::println;
-
+use fugit::RateExtU32;
 
 #[entry]
 fn main() -> ! {
-
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();
     let clocks = ClockControl::max(system.clock_control).freeze();
     let mut delay = Delay::new(&clocks);
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    
 
+    // wokwi
+    // let dc = io.pins.gpio7.into_push_pull_output();
+    // let mut rst = io.pins.gpio8.into_push_pull_output();
+    // rst.set_high().unwrap();
 
-    let dc = io.pins.gpio7.into_push_pull_output();
-    let mut rst = io.pins.gpio8.into_push_pull_output();
+    // // Define the SPI pins and create the SPI interface
+    // let sck = io.pins.gpio5;
+    // // let miso = io.pins.gpio4;
+    // let mosi = io.pins.gpio6;
+    // let cs = io.pins.gpio10.into_push_pull_output();
+
+    // io2
+    let dc = io.pins.gpio10.into_push_pull_output();
+    let mut rst = io.pins.gpio6.into_push_pull_output();
     rst.set_high().unwrap();
 
     // Define the SPI pins and create the SPI interface
-    let sck = io.pins.gpio5;
+    let sck = io.pins.gpio7;
     // let miso = io.pins.gpio4;
-    let mosi = io.pins.gpio6;
-    let cs = io.pins.gpio10.into_push_pull_output();
+    let mosi = io.pins.gpio8;
+    let cs = io.pins.gpio3.into_push_pull_output();
 
     let spi = Spi::new(peripherals.SPI2, 60u32.MHz(), SpiMode::Mode0, &clocks).with_pins(
         Some(sck),
@@ -76,12 +84,11 @@ fn main() -> ! {
     let display_modal = mipidsi::models::ILI9486Rgb565;
 
     let mut display = mipidsi::Builder::new(display_modal, di)
-    // .display_size(160, 200)
-    .reset_pin(rst)
-    .init(&mut delay)
-    .unwrap();
+        // .display_size(160, 200)
+        .reset_pin(rst)
+        .init(&mut delay)
+        .unwrap();
 
-    
     // Make the display all black
     display.clear(Rgb565::BLACK).unwrap();
     // Draw a smiley face with white eyes and a red mouth
@@ -124,8 +131,8 @@ fn draw_smiley<T: DrawTarget<Color = Rgb565>>(display: &mut T) -> Result<(), T::
 }
 
 fn demo<T: DrawTarget<Color = Rgb565>>(display: &mut T) -> Result<(), T::Error> {
-        // Draw the left eye as a circle located at (50, 100), with a diameter of 40, filled with white
-        Circle::new(Point::new(0, 0), 40)
+    // Draw the left eye as a circle located at (50, 100), with a diameter of 40, filled with white
+    Circle::new(Point::new(0, 0), 40)
         .into_styled(PrimitiveStyle::with_fill(Rgb565::WHITE))
         .draw(display)?;
     Ok(())
