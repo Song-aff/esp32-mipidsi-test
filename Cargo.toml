@@ -1,0 +1,44 @@
+[package]
+name = "esp32-mipidsi-test"
+version = "0.1.0"
+authors = ["song <281218023@qq.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+# [dependencies]
+# esp-backtrace = { version = "0.11.0", features = [
+#     "esp32c3",
+#     "exception-handler",
+#     "panic-handler",
+#     "println",
+# ] }
+# esp-hal = { version = "0.16.0", features = [ "esp32c3" ] }
+# esp-println = { version = "0.9.0", features = ["esp32c3"] }
+# esp-alloc = { version = "0.3.0" }
+# embedded-graphics = "0.8.0"
+# display-interface-spi = "0.4.1"
+# fugit = "0.3.7"
+# mipidsi ={git="https://github.com/almindor/mipidsi",branch = "master"}
+[dependencies]
+hal = { package = "esp32c3-hal", version = "0.10.0" }
+esp-backtrace = { version = "0.7.0", features = ["esp32c3", "panic-handler", "exception-handler", "print-uart"] }
+esp-println       = { version = "0.5.0", features = ["esp32c3"] }
+embedded-graphics = "0.8.0"
+display-interface-spi = "0.4.1"
+mipidsi = "0.7.1"
+fugit = "0.3.7"
+
+
+[profile.dev]
+# Rust debug is too slow. 
+# For debug builds always builds with some optimization
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1 # LLVM can perform better optimizations using a single thread
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false

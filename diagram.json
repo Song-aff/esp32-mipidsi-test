@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "author": "Sergio Gasquez Arcos",
+    "editor": "wokwi",
+    "parts": [
+      {
+        "type": "board-esp32-c3-devkitm-1",
+        "id": "esp",
+        "top": -86.7,
+        "left": -42.18,
+        "attrs": { "builder": "rust-nostd-esp" }
+      },
+      { "type": "wokwi-ili9341", "id": "lcd1", "top": -210.4, "left": 143.7, "attrs": {} }
+    ],
+    "connections": [
+      [ "esp:TX", "$serialMonitor:RX", "", [] ],
+      [ "esp:RX", "$serialMonitor:TX", "", [] ],
+      [ "esp:8", "lcd1:RST", "green", [ "h55.18", "v115.2", "h115.2" ] ],
+      [ "lcd1:D/C", "esp:7", "green", [ "v28.8", "h-134.4", "v-105.6", "h-9.6" ] ],
+      [ "lcd1:MOSI", "esp:6", "green", [ "v38.4", "h-153.61", "v-105.6" ] ],
+      [ "lcd1:CS", "esp:10", "green", [ "v86.4", "h-268.8", "v-134.4", "h-19.2" ] ],
+      [ "lcd1:SCK", "esp:5", "green", [ "v48", "h-172.81", "v-105.6" ] ],
+      [ "lcd1:MISO", "esp:4", "green", [ "v57.6", "h-201.61", "v-105.6" ] ],
+      [ "esp:GND.6", "lcd1:GND", "black", [ "v115.2", "h151.18" ] ],
+      [ "esp:5V.2", "lcd1:VCC", "red", [ "h-9.6", "v134.4", "h9.6" ] ],
+      [ "esp:5V.1", "lcd1:LED", "red", [ "h-48", "v153.6", "h345.6", "v-9.6" ] ]
+    ],
+    "serialMonitor": { "display": "terminal" },
+    "dependencies": {}
+  }
