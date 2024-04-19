@@ -27,6 +27,8 @@ use mipidsi::Builder;
 
 use esp_println::println;
 use fugit::RateExtU32;
+mod nocs;
+use nocs::NoCs;
 
 #[entry]
 fn main() -> ! {
@@ -56,18 +58,30 @@ fn main() -> ! {
     let sck = io.pins.gpio7;
     // let miso = io.pins.gpio4;
     let mosi = io.pins.gpio8;
-    let cs = io.pins.gpio3.into_push_pull_output();
+    // let cs = io.pins.gpio3.into_push_pull_output();
 
-    let spi = Spi::new(peripherals.SPI2, 60u32.MHz(), SpiMode::Mode0, &clocks).with_pins(
+    // let spi = Spi::new(peripherals.SPI2, 60u32.MHz(), SpiMode::Mode0, &clocks).with_pins(
+    //     Some(sck),
+    //     Some(mosi),
+    //     NO_PIN,
+    //     NO_PIN,
+    // );
+
+    // let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay);
+    // let di = SPIInterface::new(spi_device, dc);
+
+    // let cs = io.pins.gpio10.into_push_pull_output();
+    // cs.set_low().unwrap();
+
+    let spi = Spi::new(peripherals.SPI2, 10u32.MHz(), SpiMode::Mode3, &clocks).with_pins(
         Some(sck),
         Some(mosi),
         NO_PIN,
         NO_PIN,
     );
 
-    let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay);
+    let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new_no_delay(spi, NoCs);
     let di = SPIInterface::new(spi_device, dc);
-
     let display_modal = mipidsi::models::ST7735s;
 
     #[cfg(feature = "ST7735s")]
@@ -92,8 +106,8 @@ fn main() -> ! {
     // Make the display all black
     display.clear(Rgb565::BLACK).unwrap();
     // Draw a smiley face with white eyes and a red mouth
-    // draw_smiley(&mut display).unwrap();
-    demo(&mut display).unwrap();
+    draw_smiley(&mut display).unwrap();
+    // demo(&mut display).unwrap();
     loop {
         // Do nothing
     }

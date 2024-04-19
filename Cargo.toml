@@ -5,20 +5,7 @@ authors = ["song <281218023@qq.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
-# [dependencies]
-# esp-backtrace = { version = "0.11.0", features = [
-#     "esp32c3",
-#     "exception-handler",
-#     "panic-handler",
-#     "println",
-# ] }
-# esp-hal = { version = "0.16.0", features = [ "esp32c3" ] }
-# esp-println = { version = "0.9.0", features = ["esp32c3"] }
-# esp-alloc = { version = "0.3.0" }
-# embedded-graphics = "0.8.0"
-# display-interface-spi = "0.4.1"
-# fugit = "0.3.7"
-# mipidsi ={git="https://github.com/almindor/mipidsi",branch = "master"}
+
 [dependencies]
 embedded-hal = "1.0.0"
 hal = { package = "esp-hal", version = "0.16.1" ,features = [ "esp32c3","eh1" ] }
